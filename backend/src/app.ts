@@ -17,7 +17,7 @@ export function createApp(): express.Application {
   app.use(express.urlencoded({ extended: true }));
 
   // リクエストログ
-  app.use((req, res, next) => {
+  app.use((req, _res, next) => {
     logger.info('Incoming request', {
       method: req.method,
       path: req.path,
@@ -36,7 +36,7 @@ export function createApp(): express.Application {
   app.post('/api/analyze', controller.analyze);
 
   // ヘルスチェック
-  app.get('/health', (req, res) => {
+  app.get('/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -44,7 +44,7 @@ export function createApp(): express.Application {
   });
 
   // 404 エラー
-  app.use((req, res) => {
+  app.use((_req, res) => {
     res.status(404).json({ error: 'Not found' });
   });
 
