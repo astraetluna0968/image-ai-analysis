@@ -20,6 +20,11 @@ function App() {
             バックエンドAPI:{' '}
             {import.meta.env.VITE_API_URL || 'http://localhost:3001'}
           </p>
+          <p className="mt-2 text-xs">
+            💡 ヒント: パスに "error" を含めると失敗パターンをテストできます
+            <br />
+            例: /image/test/error.jpg
+          </p>
         </div>
       </div>
     </div>
