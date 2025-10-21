@@ -22,71 +22,46 @@ export class AnalysisService {
    * @returns 分析結果
    */
   async analyze(imagePath: string): Promise<AnalysisResult> {
-    // バリデーション
+    // バリデーション（エラー時はthrow、DBに保存しない）
     this.validateImagePath(imagePath);
 
     const requestTimestamp = new Date();
     logger.info('Analysis started', { imagePath, requestTimestamp });
 
-    try {
-      // AI APIを呼び出し
-      const apiResponse = await this.aiApiAdapter.analyze(imagePath);
-      const responseTimestamp = new Date();
+    // AI APIを呼び出し
+    const apiResponse = await this.aiApiAdapter.analyze(imagePath);
+    const responseTimestamp = new Date();
 
-      // DB保存用のログオブジェクトを作成
-      const log: AnalysisLog = {
-        imagePath,
-        success: apiResponse.success,
-        message: apiResponse.message,
-        class: apiResponse.estimated_data.class ?? null,
-        confidence: apiResponse.estimated_data.confidence ?? null,
-        requestTimestamp,
-        responseTimestamp,
-      };
+    // 外部APIのレスポンス（成功・失敗どちらも）をDBに保存
+    const log: AnalysisLog = {
+      imagePath,
+      success: apiResponse.success,
+      message: apiResponse.message,
+      class: apiResponse.estimated_data.class ?? null,
+      confidence: apiResponse.estimated_data.confidence ?? null,
+      requestTimestamp,
+      responseTimestamp,
+    };
 
-      // DBに保存
-      const id = await this.repository.save(log);
+    // DBに保存
+    const id = await this.repository.save(log);
 
-      logger.info('Analysis completed', {
-        id,
-        imagePath,
-        success: apiResponse.success,
-        duration: responseTimestamp.getTime() - requestTimestamp.getTime(),
-      });
+    logger.info('Analysis completed', {
+      id,
+      imagePath,
+      success: apiResponse.success,
+      duration: responseTimestamp.getTime() - requestTimestamp.getTime(),
+    });
 
-      // レスポンスを返す
-      return {
-        id,
-        success: apiResponse.success,
-        message: apiResponse.message,
-        estimated_data: apiResponse.estimated_data,
-        requestTimestamp: requestTimestamp.toISOString(),
-        responseTimestamp: responseTimestamp.toISOString(),
-      };
-    } catch (error) {
-      // エラーが発生した場合もログに記録
-      const responseTimestamp = new Date();
-      const errorMessage = error instanceof Error ? error.message : String(error);
-
-      const errorLog: AnalysisLog = {
-        imagePath,
-        success: false,
-        message: errorMessage,
-        class: null,
-        confidence: null,
-        requestTimestamp,
-        responseTimestamp,
-      };
-
-      await this.repository.save(errorLog);
-
-      logger.error('Analysis failed', {
-        imagePath,
-        error: errorMessage,
-      });
-
-      throw error;
-    }
+    // レスポンスを返す
+    return {
+      id,
+      success: apiResponse.success,
+      message: apiResponse.message,
+      estimated_data: apiResponse.estimated_data,
+      requestTimestamp: requestTimestamp.toISOString(),
+      responseTimestamp: responseTimestamp.toISOString(),
+    };
   }
 
   /**

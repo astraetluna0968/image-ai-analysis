@@ -94,31 +94,35 @@ describe('AnalysisService', () => {
   });
 
   describe('analyze - バリデーション', () => {
-    it('空の画像パスでエラーを投げる', async () => {
+    it('空の画像パスでエラーを投げる（DBに保存しない）', async () => {
       await expect(service.analyze('')).rejects.toThrow('Image path is required');
       await expect(service.analyze('   ')).rejects.toThrow('Image path is required');
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
-    it('不正な画像パス（/image/で始まらない）でエラーを投げる', async () => {
+    it('不正な画像パス（/image/で始まらない）でエラーを投げる（DBに保存しない）', async () => {
       await expect(service.analyze('/photos/test.jpg')).rejects.toThrow(
         'Image path must start with /image/'
       );
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
-    it('不正な拡張子でエラーを投げる', async () => {
+    it('不正な拡張子でエラーを投げる（DBに保存しない）', async () => {
       await expect(service.analyze('/image/test/sample.txt')).rejects.toThrow(
         'Image path must end with .jpg, .jpeg, .png, or .gif'
       );
       await expect(service.analyze('/image/test/sample.pdf')).rejects.toThrow(
         'Image path must end with .jpg, .jpeg, .png, or .gif'
       );
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
-    it('画像パスが255文字を超える場合エラーを投げる', async () => {
+    it('画像パスが255文字を超える場合エラーを投げる（DBに保存しない）', async () => {
       const longPath = '/image/' + 'a'.repeat(260) + '.jpg';
       await expect(service.analyze(longPath)).rejects.toThrow(
         'Image path is too long (max 255 characters)'
       );
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
     it('有効な拡張子（.jpg, .jpeg, .png, .gif）を許可', async () => {
@@ -135,28 +139,6 @@ describe('AnalysisService', () => {
       await expect(service.analyze('/image/test/sample.png')).resolves.toBeDefined();
       await expect(service.analyze('/image/test/sample.gif')).resolves.toBeDefined();
       await expect(service.analyze('/image/test/sample.JPG')).resolves.toBeDefined(); // 大文字も許可
-    });
-  });
-
-  describe('analyze - エラーハンドリング', () => {
-    it('Adapter呼び出しでエラーが発生した場合もログを保存する', async () => {
-      // Arrange
-      const error = new Error('Network error');
-      (mockAdapter.analyze as any).mockRejectedValue(error);
-      (mockRepository.save as any).mockResolvedValue(3);
-
-      // Act & Assert
-      await expect(service.analyze('/image/test/sample.jpg')).rejects.toThrow('Network error');
-
-      expect(mockRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          imagePath: '/image/test/sample.jpg',
-          success: false,
-          message: 'Network error',
-          class: null,
-          confidence: null,
-        })
-      );
     });
   });
 
