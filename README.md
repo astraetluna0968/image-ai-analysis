@@ -5,13 +5,23 @@
 外部AI APIで画像を分析し、その結果をデータベースに保存するシステム。
 実際のAPIが存在しないため、Mock実装で動作を再現しています。
 
+**フルスタック実装**: バックエンドAPI + React UI
+
 ## 技術スタック
 
+### バックエンド
 - **言語**: TypeScript
 - **フレームワーク**: Express
 - **データベース**: MySQL 8.0
 - **テストフレームワーク**: Vitest
 - **ロギング**: Winston
+
+### フロントエンド
+- **言語**: TypeScript
+- **フレームワーク**: React
+- **ビルドツール**: Vite
+- **スタイリング**: Tailwind CSS
+- **HTTP通信**: Axios
 
 ## プロジェクト構造
 
@@ -43,6 +53,23 @@ image-ai-analysis-omata/
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── vitest.config.ts
+├── frontend/                   # React UI
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── AnalysisForm.tsx
+│   │   │   └── ResultDisplay.tsx
+│   │   ├── hooks/
+│   │   │   └── useAnalysis.ts
+│   │   ├── api/
+│   │   │   └── analysisApi.ts
+│   │   ├── types/
+│   │   │   └── index.ts
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tailwind.config.js
 ├── docker-compose.yml          # MySQL環境
 ├── init.sql                    # DB初期化スクリプト
 └── README.md
@@ -88,27 +115,64 @@ docker compose up -d
 # バックエンドセットアップ
 cd backend
 npm install
-
-# 環境変数設定
 cp .env.example .env
 
-# 開発サーバー起動
+# バックエンド起動
 npm run dev
 ```
 
-サーバーが起動: `http://localhost:3001`
+バックエンドサーバーが起動: `http://localhost:3001`
 
-## API仕様
+```bash
+# フロントエンドセットアップ（別ターミナル）
+cd frontend
+npm install
+
+# フロントエンド起動
+npm run dev
+```
+
+フロントエンドが起動: `http://localhost:5174`
+
+### 🎨 UIでの使い方
+
+1. ブラウザで `http://localhost:5174` を開く
+2. 画像パス入力フォームに `/image/test/sample.jpg` を入力
+3. 「分析実行」ボタンをクリック
+4. 結果が画面に表示される
+
+**失敗パターンのテスト**: パスに `error` を含める（例: `/image/test/error.jpg`）
+
+## API仕様（開発者向け参考資料）
+
+以下は開発者がAPIを直接テストする際の参考情報です。
+通常の利用はReact UI（`http://localhost:5174`）をご利用ください。
 
 ### POST /api/analyze
 
 画像分析を実行し、結果をDBに保存
 
-**リクエスト:**
+**cURLでのリクエスト例:**
 ```bash
+# 成功ケース
 curl -X POST http://localhost:3001/api/analyze \
   -H "Content-Type: application/json" \
   -d '{"image_path": "/image/test/sample.jpg"}'
+
+# 失敗ケース（パスに"error"を含む）
+curl -X POST http://localhost:3001/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"image_path": "/image/test/error.jpg"}'
+
+# バリデーションエラー例（/image/で始まらない）
+curl -X POST http://localhost:3001/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"image_path": "/photos/test.jpg"}'
+
+# バリデーションエラー例（不正な拡張子）
+curl -X POST http://localhost:3001/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"image_path": "/image/test/sample.txt"}'
 ```
 
 **レスポンス（成功時）:**
@@ -142,6 +206,7 @@ curl -X POST http://localhost:3001/api/analyze \
 
 ヘルスチェック
 
+**cURLでのリクエスト例:**
 ```bash
 curl http://localhost:3001/health
 ```
@@ -208,39 +273,6 @@ docker exec ai_analysis_mysql mysql -u app_user -papp_password \
 - **レスポンスタイム**: 100msのシミュレーション
 
 本番環境では、`IAiApiAdapter`インターフェースを実装した実際のAPIアダプターに差し替えるだけで動作するようにしています。
-
-
-## 動作確認例
-
-### 成功ケース
-
-```bash
-curl -X POST http://localhost:3001/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"image_path": "/image/test/sample.jpg"}'
-```
-
-### 失敗ケース（動作確認用）
-
-```bash
-curl -X POST http://localhost:3001/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"image_path": "/image/test/error.jpg"}'
-```
-
-### バリデーションエラー
-
-```bash
-# /image/ で始まらない
-curl -X POST http://localhost:3001/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"image_path": "/photos/test.jpg"}'
-
-# 不正な拡張子
-curl -X POST http://localhost:3001/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"image_path": "/image/test/sample.txt"}'
-```
 
 ## トラブルシューティング
 
