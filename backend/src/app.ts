@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { AnalysisController } from './controllers/AnalysisController';
 import { AnalysisService } from './services/AnalysisService';
 import { AnalysisLogRepository } from './repositories/AnalysisLogRepository';
@@ -13,6 +14,7 @@ export function createApp(): express.Application {
   const app = express();
 
   // ミドルウェア
+  app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 

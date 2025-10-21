@@ -1,35 +1,29 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useAnalysis } from './hooks/useAnalysis';
+import { AnalysisForm } from './components/AnalysisForm';
+import { ResultDisplay } from './components/ResultDisplay';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { analyze, loading, error, result } = useAnalysis();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          AI画像分析システム
+        </h1>
+
+        <AnalysisForm onSubmit={analyze} loading={loading} />
+        <ResultDisplay result={result} error={error} />
+
+        <div className="text-center text-sm text-gray-500 mt-8">
+          <p>
+            バックエンドAPI:{' '}
+            {import.meta.env.VITE_API_URL || 'http://localhost:3001'}
+          </p>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
