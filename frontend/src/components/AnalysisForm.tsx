@@ -7,10 +7,42 @@ interface AnalysisFormProps {
 
 export const AnalysisForm = ({ onSubmit, loading }: AnalysisFormProps) => {
   const [imagePath, setImagePath] = useState('/image/test/sample.jpg');
+  const [validationError, setValidationError] = useState<string>('');
+
+  const validateImagePath = (path: string): string => {
+    if (!path.startsWith('/image/')) {
+      return '画像パスは /image/ で始まる必要があります';
+    }
+    if (path.length > 255) {
+      return '画像パスは255文字以内である必要があります';
+    }
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    const hasValidExtension = validExtensions.some((ext) =>
+      path.toLowerCase().endsWith(ext)
+    );
+    if (!hasValidExtension) {
+      return '画像パスは .jpg, .jpeg, .png, .gif のいずれかで終わる必要があります';
+    }
+    return '';
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    const error = validateImagePath(imagePath);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+    setValidationError('');
     onSubmit(imagePath);
+  };
+
+  const handleInputChange = (value: string) => {
+    setImagePath(value);
+    // 入力中はエラーをクリア
+    if (validationError) {
+      setValidationError('');
+    }
   };
 
   return (
@@ -29,14 +61,23 @@ export const AnalysisForm = ({ onSubmit, loading }: AnalysisFormProps) => {
             type="text"
             id="imagePath"
             value={imagePath}
-            onChange={(e) => setImagePath(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+            onChange={(e) => handleInputChange(e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+              validationError
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             placeholder="/image/test/sample.jpg"
             disabled={loading}
           />
-          <p className="mt-2 text-sm text-gray-500">
-            形式: /image/.../*.{'{jpg,jpeg,png,gif}'}
-          </p>
+          {validationError && (
+            <p className="mt-2 text-sm text-red-600">{validationError}</p>
+          )}
+          {!validationError && (
+            <p className="mt-2 text-sm text-gray-500">
+              形式: /image/.../*.{'{jpg,jpeg,png,gif}'}
+            </p>
+          )}
         </div>
 
         <button
