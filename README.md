@@ -274,6 +274,30 @@ docker exec ai_analysis_mysql mysql -u app_user -papp_password \
 
 本番環境では、`IAiApiAdapter`インターフェースを実装した実際のAPIアダプターに差し替えるだけで動作するようにしています。
 
+## デモ
+
+### 初期表示
+
+![画面表示時](docs/画面表示時.png)
+
+### 成功時
+
+画像パス `/image/test/sample.jpg` で分析を実行した結果
+
+![成功時](docs/成功時.png)
+
+### 失敗時
+
+画像パスに `error` を含めた場合（`/image/test/error.jpg`）
+
+![失敗時](docs/失敗時.png)
+
+### バリデーションエラー
+
+不正な画像パスを入力した場合のフロントエンドバリデーション
+
+![バリデーションエラー](docs/バリデーションエラー.png)
+
 ## トラブルシューティング
 
 ### MySQLに接続できない
